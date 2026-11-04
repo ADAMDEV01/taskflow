@@ -24,7 +24,7 @@ export function useUpdateTaskStatus(userId: string) {
       client.setQueryData<Task[]>(taskKeys.list(userId), old => old?.map(task => task.id === taskId ? { ...task, status } : task))
       return { previous }
     },
-    onError: (_error, _variables, context) => { if (context?.previous) client.setQueryData(taskKeys.list(userId), context.previous) },
+    onError: (_error, _variables, context) => { if (context?.previous) client.setQueryData(taskKeys.list(userId), context.previous); window.dispatchEvent(new CustomEvent('taskflow:toast', { detail: 'Could not update task status. Changes were reverted.' })) },
     onSettled: () => client.invalidateQueries({ queryKey: taskKeys.list(userId) }),
   })
 }
