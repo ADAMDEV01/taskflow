@@ -1,0 +1,12 @@
+import { test, expect } from '@playwright/test'
+test('demo mode supports task creation and persistence without Supabase',async({page})=>{
+ await page.goto('/')
+ await expect(page.getByText('Demo mode',{exact:true})).toBeVisible()
+ await expect(page.getByText(/data is saved only in your browser/i)).toBeVisible()
+ await page.getByRole('button',{name:/new task/i}).click()
+ await page.getByPlaceholder('e.g. Prepare launch notes').fill('E2E demo task')
+ await page.getByRole('button',{name:'Add task'}).click()
+ await expect(page.getByRole('heading',{name:'E2E demo task'})).toBeVisible()
+ await page.reload()
+ await expect(page.getByRole('heading',{name:'E2E demo task'})).toBeVisible()
+})
