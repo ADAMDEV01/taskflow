@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { useProfile } from '../hooks/useProfile'
 import { Logo } from './Logo'
 import { DemoBanner } from './DemoBanner'
+import { ToastViewport } from './ToastViewport'
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, signOut } = useAuth()
@@ -22,6 +23,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="user-menu"><Link to="/app/settings" className="avatar" aria-label="Open settings">{initials}</Link><button className="signout-button" onClick={handleSignOut}>Sign out</button></div>
     </header>
     <DemoBanner />
+    <ToastViewport />
     <main className="main-content">{children}</main>
     <footer className="footer">Built for focus · <span>{new Date().getFullYear()} Taskflow</span></footer>
   </div>
