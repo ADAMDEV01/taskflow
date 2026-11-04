@@ -34,8 +34,7 @@ Only the public URL and anon/publishable key belong in browser variables. Never 
 erDiagram
   AUTH_USERS ||--|| PROFILES : owns
   AUTH_USERS ||--o{ TASKS : owns
-  PROFILES { uuid id PK; text display_name; text avatar_url }
-  TASKS { uuid id PK; uuid user_id FK; text title; text status; text priority; date due_date }
+  PROFILES {\n    uuid id PK\n    text display_name\n    text avatar_url\n  }\n  TASKS {\n    uuid id PK\n    uuid user_id FK\n    text title\n    text status\n    text priority\n    date due_date\n  }
 ```
 
 ## Row-level security
