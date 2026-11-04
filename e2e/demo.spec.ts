@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test'
-test('demo mode supports task creation and persistence without Supabase',async({page})=>{
+test('visitor can use the browser-only demo without a Supabase account',async({page})=>{
  await page.goto('/')
+ await page.getByLabel('Email address').fill('visitor@example.test')
+ await page.getByLabel('Password').fill('demo-password')
+ await page.getByRole('button',{name:'Sign in'}).click()
  await expect(page.getByText('Demo mode',{exact:true})).toBeVisible()
  await expect(page.getByText(/data is saved only in your browser/i)).toBeVisible()
  await page.getByRole('button',{name:/new task/i}).click()
