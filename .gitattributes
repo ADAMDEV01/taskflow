@@ -1,5 +1,4 @@
-# Prefer TypeScript as the repository language for GitHub language detection.
-# Generated and static files should not dominate the project profile.
+* text=auto eol=lf
 *.ts linguist-language=TypeScript
 *.tsx linguist-language=TypeScript
 *.html linguist-detectable=false

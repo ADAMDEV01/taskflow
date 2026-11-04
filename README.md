@@ -1,43 +1,63 @@
 # Taskflow
 
-Taskflow is a production-style, responsive task manager built with Vite, React, TypeScript, Supabase, and TanStack Query. It supports email authentication, private task CRUD, status and priority tracking, due dates, search, filters, and profile settings.
+A responsive task-management workspace built with React, TypeScript, Vite, TanStack Query and Supabase. Includes task CRUD, status/priority tracking, due dates, search, filters and profile settings.
 
-## Quick start
+## Try the demo
+
+Run without Supabase variables:
 
 ```bash
 npm install
-copy .env.example .env.local
-# Add your Supabase project URL and anon key to .env.local
 npm run dev
 ```
 
-In Supabase, run `supabase/migrations/20250915000000_initial_schema.sql` in the SQL editor. Enable Email provider authentication under **Authentication → Providers**. Email confirmation can remain enabled for production.
+**Demo mode: data is saved only in your browser. Any email address is accepted; no account is required.** Demo records stay in this browser's localStorage and are not uploaded or shared. Do not enter sensitive information. Clear this site's local storage to reset the demo.
 
-## Environment
+With Supabase credentials configured, the app uses Supabase Auth and PostgreSQL instead.
 
-Only the public browser configuration belongs in Vite variables:
+## Supabase setup
 
-```text
+1. Create a Supabase project and enable Email in Authentication → Providers.
+2. Run `supabase/migrations/20250915000000_initial_schema.sql` in the SQL Editor.
+3. Add to `.env.local`:
+
+```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-Never add a Supabase service role key to `.env`, frontend source, or client bundles. Row-level security policies ensure each signed-in user can only access their own records.
+Only the public URL and anon/publishable key belong in browser variables. Never expose a service-role key.
 
-### Vercel deployment
+## Schema
 
-Add these two variables in **Project Settings → Environment Variables** for the
-environments you deploy:
+```mermaid
+erDiagram
+  AUTH_USERS ||--|| PROFILES : owns
+  AUTH_USERS ||--o{ TASKS : owns
+  PROFILES {\n    uuid id PK\n    text display_name\n    text avatar_url\n  }\n  TASKS {\n    uuid id PK\n    uuid user_id FK\n    text title\n    text status\n    text priority\n    date due_date\n  }
+```
 
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
+## Row-level security
 
-After saving them, redeploy the project. The included `vercel.json` routes
-client-side paths such as `/login` and `/app/tasks` back to the Vite entry
-point, preventing 404 errors when those URLs are opened directly.
+RLS is enabled on `profiles` and `tasks`. Profile SELECT/INSERT/UPDATE policies require `auth.uid() = id`. Task SELECT/INSERT/UPDATE/DELETE policies require `auth.uid() = user_id`; UPDATE also uses `WITH CHECK` so ownership cannot be reassigned. See `supabase/tests/rls_isolation.sql` for the two-user isolation regression script.
 
-## Commands
+## Production demo
 
-- `npm run dev` — local development server
-- `npm run build` — type-check and production build
-- `npm run preview` — preview the production bundle
+A live Supabase-backed demo needs a real Supabase project, deployed environment variables, and a deliberately provisioned demo account. Those are owner-controlled settings and no credentials are committed here. Vercel variables: `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+
+## Development
+
+```bash
+npm install
+npm run dev
+npm run lint
+npm test
+npm run build
+npm run test:e2e
+```
+
+CI runs lint, unit tests, Playwright demo E2E and the production build. E2E does not require Supabase.
+
+## Screenshots
+
+Capture the real running app and add these images under `docs/screenshots/`: `tasks.png` (task list), `dashboard.png` (overview), and `settings.png` (profile settings). Screenshots are not fabricated; capture them from the final UI.
