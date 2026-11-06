@@ -6,6 +6,7 @@ import { TaskBoard } from '../components/TaskBoard'
 import { TaskForm } from '../components/TaskForm'
 import { EmptyState } from '../components/EmptyState'
 import type { Task, TaskInput, TaskPriority, TaskStatus } from '../types'
+import { filterAndSortTasks } from '../lib/taskFilters'
 
 export function TasksPage() {
  const {user}=useAuth()
@@ -14,11 +15,7 @@ export function TasksPage() {
  const [query,setQuery]=useState(''),[visibleCount,setVisibleCount]=useState(10),[filter,setFilter]=useState<'all'|TaskStatus>('all')
  const [priority,setPriority]=useState<'all'|TaskPriority>('all'),[sort,setSort]=useState<'created'|'due'|'priority'>('created')
  const [editing,setEditing]=useState<Task|null>(null),[open,setOpen]=useState(false),[view,setView]=useState<'list'|'board'>('list')
- const shown=useMemo(()=>{
-  const rank:Record<TaskPriority,number>={high:0,medium:1,low:2}
-  return tasks.filter(task=>(filter==='all'||task.status===filter)&&(priority==='all'||task.priority===priority)&&`${task.title} ${task.description||''}`.toLowerCase().includes(query.toLowerCase()))
-   .sort((a,b)=>sort==='priority'?rank[a.priority]-rank[b.priority]:sort==='due'?(a.due_date||'9999-12-31').localeCompare(b.due_date||'9999-12-31'):b.created_at.localeCompare(a.created_at))
- },[tasks,filter,priority,query,sort])
+ const shown=useMemo(()=>filterAndSortTasks(tasks,query,filter,priority,sort),[tasks,query,filter,priority,sort])
  async function save(input:TaskInput){if(editing)await update.mutateAsync({taskId:editing.id,input});else await create.mutateAsync(input);setOpen(false);setEditing(null)}
  function removeTask(task:Task){if(window.confirm(`Delete “${task.title}”? `))remove.mutate(task.id)}
  return <div className="dashboard">
