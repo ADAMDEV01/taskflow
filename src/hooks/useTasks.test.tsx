@@ -16,6 +16,12 @@ describe('task query hooks',()=>{
   expect(mocks.listTasks).toHaveBeenCalledWith('u1')
   expect(taskKeys.list('u1')).not.toEqual(taskKeys.list('u2'))
  })
+ it('exposes query failures for the page retry state',async()=>{
+  mocks.listTasks.mockRejectedValueOnce(new Error('offline'))
+  const {result}=renderHook(()=>useTasks('u1'),{wrapper:makeWrapper(client)})
+  await waitFor(()=>expect(result.current.isError).toBe(true))
+  expect(result.current.error?.message).toBe('offline')
+ })
  it('does not fetch without an authenticated user',async()=>{
   const {result}=renderHook(()=>useTasks(undefined),{wrapper:makeWrapper(client)})
   expect(result.current.fetchStatus).toBe('idle')
