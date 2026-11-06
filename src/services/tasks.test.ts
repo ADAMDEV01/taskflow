@@ -11,14 +11,14 @@ describe('demo task CRUD and ownership',()=>{
   expect(await listTasks('u2')).toHaveLength(0)
  })
  it('updates only a task belonging to the current identity',async()=>{
-  localStorage.setItem('taskflow-demo-tasks',JSON.stringify([task,{...task,user_id:'u2'}]))
+  localStorage.setItem('taskflow-demo-tasks',JSON.stringify([task,{...task,id:'task-2',user_id:'u2'}]))
   await updateTask('u1','task-1',{title:'Updated'})
   expect((await listTasks('u1'))[0].title).toBe('Updated')
   expect((await listTasks('u2'))[0].title).toBe('Write tests')
   await expect(updateTask('u2','task-1',{title:'No access'})).rejects.toThrow('Task not found')
  })
  it('deletes only a task belonging to the current identity',async()=>{
-  localStorage.setItem('taskflow-demo-tasks',JSON.stringify([task,{...task,user_id:'u2'}]))
+  localStorage.setItem('taskflow-demo-tasks',JSON.stringify([task]))
   await deleteTask('u2','task-1')
   expect(await listTasks('u1')).toHaveLength(1)
   expect(await listTasks('u2')).toHaveLength(0)
