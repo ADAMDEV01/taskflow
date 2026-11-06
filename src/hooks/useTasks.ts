@@ -12,23 +12,26 @@ export function useCreateTask(userId: string) {
 }
 export function useUpdateTask(userId: string) {
   const client = useQueryClient()
-  return useMutation({ mutationFn: ({ taskId, input }: { taskId: string; input: Partial<TaskInput> }) => updateTask(taskId, input), onSuccess: () => client.invalidateQueries({ queryKey: taskKeys.list(userId) }) })
+  return useMutation({ mutationFn: ({ taskId, input }: { taskId: string; input: Partial<TaskInput> }) => updateTask(userId, taskId, input), onSuccess: () => client.invalidateQueries({ queryKey: taskKeys.list(userId) }) })
 }
 export function useUpdateTaskStatus(userId: string) {
   const client = useQueryClient()
   return useMutation({
-    mutationFn: ({ taskId, status }: { taskId: string; status: TaskStatus }) => updateTaskStatus(taskId, status),
+    mutationFn: ({ taskId, status }: { taskId: string; status: TaskStatus }) => updateTaskStatus(userId, taskId, status),
     onMutate: async ({ taskId, status }) => {
       await client.cancelQueries({ queryKey: taskKeys.list(userId) })
       const previous = client.getQueryData<Task[]>(taskKeys.list(userId))
       client.setQueryData<Task[]>(taskKeys.list(userId), old => old?.map(task => task.id === taskId ? { ...task, status } : task))
       return { previous }
     },
-    onError: (_error, _variables, context) => { if (context?.previous) client.setQueryData(taskKeys.list(userId), context.previous); window.dispatchEvent(new CustomEvent('taskflow:toast', { detail: 'Could not update task status. Changes were reverted.' })) },
+    onError: (_error, _variables, context) => {
+      if (context?.previous) client.setQueryData(taskKeys.list(userId), context.previous)
+      window.dispatchEvent(new CustomEvent('taskflow:toast', { detail: 'Could not update task status. Changes were reverted.' }))
+    },
     onSettled: () => client.invalidateQueries({ queryKey: taskKeys.list(userId) }),
   })
 }
 export function useDeleteTask(userId: string) {
   const client = useQueryClient()
-  return useMutation({ mutationFn: deleteTask, onSuccess: () => client.invalidateQueries({ queryKey: taskKeys.list(userId) }) })
+  return useMutation({ mutationFn: (taskId: string) => deleteTask(userId, taskId), onSuccess: () => client.invalidateQueries({ queryKey: taskKeys.list(userId) }) })
 }

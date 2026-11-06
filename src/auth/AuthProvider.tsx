@@ -10,26 +10,27 @@ interface AuthContextValue {
   signUp: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
 }
-
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
+const demoEmailKey = 'taskflow-demo-user'
+const demoIdentitiesKey = 'taskflow-demo-identities'
 
-function createDemoUser(email: string): User {
+function getDemoIdentity(email: string): string {
+  const normalized = email.trim().toLowerCase()
+  if (!normalized) throw new Error('Enter an email address to use demo mode.')
+  const identities = JSON.parse(localStorage.getItem(demoIdentitiesKey) || '{}') as Record<string, string>
+  if (!identities[normalized]) {
+    identities[normalized] = `demo-${crypto.randomUUID()}`
+    localStorage.setItem(demoIdentitiesKey, JSON.stringify(identities))
+  }
+  return identities[normalized]
+}
+function createDemoUser(email: string, id: string): User {
   const now = new Date().toISOString()
   return {
-    id: 'demo-user',
-    aud: 'authenticated',
-    role: 'authenticated',
-    email: email || 'demo@example.com',
-    email_confirmed_at: now,
-    phone: '',
-    confirmed_at: now,
-    last_sign_in_at: now,
-    app_metadata: { provider: 'demo', providers: ['demo'] },
-    user_metadata: {},
-    identities: [],
-    created_at: now,
-    updated_at: now,
-    is_anonymous: false,
+    id, aud: 'authenticated', role: 'authenticated', email: email.trim().toLowerCase(),
+    email_confirmed_at: now, phone: '', confirmed_at: now, last_sign_in_at: now,
+    app_metadata: { provider: 'demo', providers: ['demo'] }, user_metadata: {}, identities: [],
+    created_at: now, updated_at: now, is_anonymous: false,
   }
 }
 
@@ -40,64 +41,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (isDemoMode) {
-      const email = localStorage.getItem('taskflow-demo-user')
-      if (email) setDemoUser(createDemoUser(email))
+      const email = localStorage.getItem(demoEmailKey)
+      if (email) setDemoUser(createDemoUser(email, getDemoIdentity(email)))
       setLoading(false)
       return
     }
     let mounted = true
     supabase.auth.getSession().then(({ data }) => {
-      if (mounted) {
-        setSession(data.session)
-        setLoading(false)
-      }
-    })
+      if (mounted) { setSession(data.session); setLoading(false) }
+    }).catch(() => { if (mounted) setLoading(false) })
     const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession)
       setLoading(false)
     })
-    return () => {
-      mounted = false
-      listener.subscription.unsubscribe()
-    }
+    return () => { mounted = false; listener.subscription.unsubscribe() }
   }, [])
 
-  const value = useMemo<AuthContextValue>(
-    () => ({
-      session,
-      user: session?.user || demoUser,
-      loading,
-      signIn: async (email, password) => {
-        if (isDemoMode) {
-          setDemoUser(createDemoUser(email))
-          localStorage.setItem('taskflow-demo-user', email)
-          return
-        }
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) throw error
-      },
-      signUp: async (email, password) => {
-        if (isDemoMode) {
-          setDemoUser(createDemoUser(email))
-          localStorage.setItem('taskflow-demo-user', email)
-          return
-        }
-        const { error } = await supabase.auth.signUp({ email, password })
-        if (error) throw error
-      },
-      signOut: async () => {
-        if (isDemoMode) {
-          setDemoUser(null)
-          localStorage.removeItem('taskflow-demo-user')
-          return
-        }
-        const { error } = await supabase.auth.signOut()
-        if (error) throw error
-      },
-    }),
-    [demoUser, loading, session],
-  )
-
+  const value = useMemo<AuthContextValue>(() => ({
+    session, user: session?.user || demoUser, loading,
+    signIn: async (email, password) => {
+      if (isDemoMode) {
+        const user = createDemoUser(email, getDemoIdentity(email))
+        localStorage.setItem(demoEmailKey, user.email || email.trim().toLowerCase())
+        setDemoUser(user)
+        return
+      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) throw error
+    },
+    signUp: async (email, password) => {
+      if (isDemoMode) {
+        const user = createDemoUser(email, getDemoIdentity(email))
+        localStorage.setItem(demoEmailKey, user.email || email.trim().toLowerCase())
+        setDemoUser(user)
+        return
+      }
+      const { error } = await supabase.auth.signUp({ email, password })
+      if (error) throw error
+    },
+    signOut: async () => {
+      if (isDemoMode) { setDemoUser(null); localStorage.removeItem(demoEmailKey); return }
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+    },
+  }), [demoUser, loading, session])
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 

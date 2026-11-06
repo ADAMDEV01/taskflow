@@ -3,23 +3,29 @@ const { fromMock } = vi.hoisted(() => ({ fromMock: vi.fn() }))
 vi.mock('../lib/supabase', () => ({ isDemoMode:true, supabase:{ from:fromMock } }))
 import { createTask, deleteTask, listTasks, updateTask } from './tasks'
 const task={id:'task-1',user_id:'u1',title:'Write tests',description:null,status:'todo' as const,priority:'medium' as const,due_date:null,created_at:'2026-01-01',updated_at:'2026-01-01'}
-describe('demo task service',()=>{
- beforeEach(()=>localStorage.clear())
- it('creates and scopes tasks to a demo user',async()=>{
-  vi.stubGlobal('crypto',{randomUUID:()=> 'task-1'})
+describe('demo task CRUD and ownership',()=>{
+ beforeEach(()=>{localStorage.clear();vi.stubGlobal('crypto',{randomUUID:()=> 'task-new'})})
+ it('creates and lists records only for their owner',async()=>{
   await createTask('u1',{title:task.title,status:'todo',priority:'medium'})
   expect(await listTasks('u1')).toHaveLength(1)
   expect(await listTasks('u2')).toHaveLength(0)
  })
- it('updates tasks and rejects missing ids',async()=>{
-  localStorage.setItem('taskflow-demo-tasks',JSON.stringify([task]))
-  await updateTask('task-1',{title:'Updated'})
+ it('updates only a task belonging to the current identity',async()=>{
+  localStorage.setItem('taskflow-demo-tasks',JSON.stringify([task,{...task,id:'task-2',user_id:'u2'}]))
+  await updateTask('u1','task-1',{title:'Updated'})
   expect((await listTasks('u1'))[0].title).toBe('Updated')
-  await expect(updateTask('missing',{title:'No'})).rejects.toThrow('Task not found')
+  expect((await listTasks('u2'))[0].title).toBe('Write tests')
+  await expect(updateTask('u2','task-1',{title:'No access'})).rejects.toThrow('Task not found')
  })
- it('deletes a selected task',async()=>{
-  localStorage.setItem('taskflow-demo-tasks',JSON.stringify([task,{...task,id:'task-2'}]))
-  await deleteTask('task-1')
-  expect((await listTasks('u1')).map(t=>t.id)).toEqual(['task-2'])
+ it('deletes only a task belonging to the current identity',async()=>{
+  localStorage.setItem('taskflow-demo-tasks',JSON.stringify([task]))
+  await deleteTask('u2','task-1')
+  expect(await listTasks('u1')).toHaveLength(1)
+  expect(await listTasks('u2')).toHaveLength(0)
+ })
+ it('supports status updates through the same owner-scoped update path',async()=>{
+  localStorage.setItem('taskflow-demo-tasks',JSON.stringify([task]))
+  await (await import('./tasks')).updateTaskStatus('u1','task-1','done')
+  expect((await listTasks('u1'))[0].status).toBe('done')
  })
 })
