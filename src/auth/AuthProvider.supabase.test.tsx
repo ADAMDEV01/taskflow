@@ -16,8 +16,7 @@ vi.mock('../lib/supabase', () => ({
   } },
 }))
 import { AuthProvider, useAuth } from './AuthProvider'
-import type { ReactNode as RN } from 'react'
-const wrapper = ({ children }: { children: RN }) => createElement(AuthProvider, null, children)
+const wrapper = ({ children }: { children: ReactNode }) => createElement(AuthProvider, null, children)
 describe('Supabase session lifecycle', () => {
   beforeEach(() => { mocks.callback = null; mocks.unsubscribe.mockClear() })
   it('reacts to refreshed and expired/sign-out sessions from Supabase Auth', async () => {
