@@ -16,3 +16,7 @@ export function filterAndSortTasks(tasks: Task[], query: string, status: TaskFil
     b.created_at.localeCompare(a.created_at),
   )
 }
+
+export function paginateTasks(tasks: Task[], visibleCount: number): Task[] {
+  return tasks.slice(0, Math.max(0, visibleCount))
+}
