@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { filterAndSortTasks } from './taskFilters'
+import { filterAndSortTasks, paginateTasks } from './taskFilters'
 import type { Task } from '../types'
 const tasks: Task[] = [
  {id:'1',user_id:'u',title:'Write tests',description:'API coverage',status:'todo',priority:'high',due_date:'2026-11-10',created_at:'2026-11-01',updated_at:''},
@@ -11,4 +11,5 @@ describe('task filtering, search and sorting',()=>{
  it('combines status and priority filters',()=>expect(filterAndSortTasks(tasks,'','todo','high','created').map(t=>t.id)).toEqual(['1']))
  it('sorts by due date with undated tasks last',()=>expect(filterAndSortTasks(tasks,'','all','all','due').map(t=>t.id)).toEqual(['3','1','2']))
  it('sorts newest first by creation date',()=>expect(filterAndSortTasks(tasks,'','all','all','created').map(t=>t.id)).toEqual(['2','3','1']))
+ it('paginates the filtered result in stable order',()=>expect(paginateTasks(filterAndSortTasks(tasks,'','all','all','created'),2).map(t=>t.id)).toEqual(['2','3']))
 })
