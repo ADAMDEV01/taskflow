@@ -49,6 +49,8 @@ npm run build
 npm run test:e2e
 ```
 
+When dependencies change, run `npm run lockfile:sync` and commit the resulting `package-lock.json`; clean installs then use `npm ci`.
+
 RLS integration tests run locally with Docker and the Supabase CLI:
 
 ```bash
