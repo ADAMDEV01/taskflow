@@ -59,14 +59,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AuthContextValue>(() => ({
     session, user: session?.user || demoUser, loading,
-    signIn: async (email) => {
+    signIn: async (email, password) => {
       if (isDemoMode) {
         const user = createDemoUser(email, getDemoIdentity(email))
         localStorage.setItem(demoEmailKey, user.email || email.trim().toLowerCase())
         setDemoUser(user)
         return
       }
-      const { error } = await supabase.auth.signInWithPassword({ email, password: '' })
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
     },
     signUp: async (email, password) => {
