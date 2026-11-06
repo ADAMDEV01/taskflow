@@ -19,9 +19,13 @@ select set_config('request.jwt.claims','{"sub":"10000000-0000-4000-8000-00000000
 select is((select count(*)::int from public.tasks),1,'A can read only A tasks');
 select is((select count(*)::int from public.tasks where id='b0000000-0000-4000-8000-000000000002'),0,'A cannot read B task');
 update public.tasks set title='Compromised' where id='b0000000-0000-4000-8000-000000000002';
+reset role;
 select is((select title from public.tasks where id='b0000000-0000-4000-8000-000000000002'),'B private task','A cannot update B task');
+set local role authenticated;
 delete from public.tasks where id='b0000000-0000-4000-8000-000000000002';
+reset role;
 select is((select count(*)::int from public.tasks where id='b0000000-0000-4000-8000-000000000002'),1,'A cannot delete B task');
+set local role authenticated;
 select throws_ok(
   $$update public.tasks set user_id='20000000-0000-4000-8000-000000000002' where id='a0000000-0000-4000-8000-000000000001'$$,
   '42501', null, 'A cannot transfer ownership of A task'
