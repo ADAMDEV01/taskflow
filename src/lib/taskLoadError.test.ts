@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { getTaskLoadErrorMessage } from './taskLoadError'
 
 describe('getTaskLoadErrorMessage', () => {
+  it('does not blame Supabase when the app is using local demo storage', () => {
+    expect(getTaskLoadErrorMessage(new Error('Browser storage is unavailable'), true)).toContain('Browser storage is unavailable')
+  })
   it('explains when the hosted tasks table has not been migrated', () => {
     expect(getTaskLoadErrorMessage({ code: '42P01', message: 'relation "public.tasks" does not exist' })).toContain('Apply supabase/migrations/20250915000000_initial_schema.sql')
   })
