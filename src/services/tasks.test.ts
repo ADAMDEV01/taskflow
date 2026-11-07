@@ -23,6 +23,12 @@ describe('demo task CRUD and ownership',()=>{
   expect(await listTasks('u1')).toHaveLength(1)
   expect(await listTasks('u2')).toHaveLength(0)
  })
+ it('recovers from malformed local task storage without crashing the tasks page',async()=>{
+  localStorage.setItem('taskflow-demo-tasks','{not valid json')
+  expect(await listTasks('u1')).toEqual([])
+  expect(localStorage.getItem('taskflow-demo-tasks')).toBeNull()
+  expect(localStorage.getItem('taskflow-demo-tasks-corrupt-backup')).toBe('{not valid json')
+ })
  it('supports status updates through the same owner-scoped update path',async()=>{
   localStorage.setItem('taskflow-demo-tasks',JSON.stringify([task]))
   await (await import('./tasks')).updateTaskStatus('u1','task-1','done')

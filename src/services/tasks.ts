@@ -4,8 +4,27 @@ import type { Task, TaskInput, TaskStatus } from '../types'
 const demoTasksKey = 'taskflow-demo-tasks'
 
 function readDemoTasks(userId: string): Task[] {
-  const stored = localStorage.getItem(demoTasksKey)
-  return stored ? (JSON.parse(stored) as Task[]).filter((task) => task.user_id === userId) : []
+  let stored: string | null
+  try {
+    stored = localStorage.getItem(demoTasksKey)
+  } catch {
+    throw new Error('Browser storage is unavailable. Enable site storage for Taskflow and reload the page.')
+  }
+  if (!stored) return []
+  try {
+    const parsed: unknown = JSON.parse(stored)
+    if (!Array.isArray(parsed)) throw new Error('Stored tasks are not a list')
+    return (parsed as Task[]).filter((task) => task && task.user_id === userId)
+  } catch {
+    // Preserve the malformed value for recovery, then reset only the Taskflow tasks key.
+    try {
+      localStorage.setItem('taskflow-demo-tasks-corrupt-backup', stored)
+      localStorage.removeItem(demoTasksKey)
+    } catch {
+      throw new Error('Taskflow demo data is unreadable and browser storage cannot repair it. Enable site storage, then reload.')
+    }
+    return []
+  }
 }
 function writeDemoTasks(tasks: Task[]) { localStorage.setItem(demoTasksKey, JSON.stringify(tasks)) }
 

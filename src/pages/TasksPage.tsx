@@ -7,6 +7,8 @@ import { TaskForm } from '../components/TaskForm'
 import { EmptyState } from '../components/EmptyState'
 import type { Task, TaskInput, TaskPriority, TaskStatus } from '../types'
 import { filterAndSortTasks, paginateTasks } from '../lib/taskFilters'
+import { getTaskLoadErrorMessage } from '../lib/taskLoadError'
+import { isDemoMode } from '../lib/supabase'
 
 export function TasksPage() {
  const {user}=useAuth()
@@ -28,7 +30,7 @@ export function TasksPage() {
     <label className="toolbar-field">Sort by<select value={sort} onChange={e=>setSort(e.target.value as 'created'|'due'|'priority')}><option value="created">Newest</option><option value="due">Due date</option><option value="priority">Priority</option></select></label>
     <div className="view-toggle" aria-label="Task view"><button className={view==='list'?'active':''} onClick={()=>setView('list')}>List</button><button className={view==='board'?'active':''} onClick={()=>setView('board')}>Kanban</button></div>
    </div>
-   {isLoading?<div className="loading-list"><span className="spinner"/>Loading tasks…</div>:error?<div className="error-panel">Couldn’t load your tasks. Check your Supabase connection and try again.<button className="button secondary" onClick={()=>refetch()}>Try again</button></div>:shown.length===0?<EmptyState filtered={tasks.length>0} onAdd={()=>setOpen(true)}/>:view==='board'?<TaskBoard tasks={shown} onStatusChange={(taskId,status)=>updateStatus.mutate({taskId,status})}/>:<><div className="task-list">{paginateTasks(shown,visibleCount).map(task=><TaskCard key={task.id} task={task} onStatusChange={status=>updateStatus.mutate({taskId:task.id,status})} onEdit={()=>{setEditing(task);setOpen(true)}} onDelete={()=>removeTask(task)}/>)}</div>{shown.length>visibleCount&&<div className="load-more"><button className="button secondary" onClick={()=>setVisibleCount(count=>count+10)}>Load more tasks</button><span>{Math.min(visibleCount,shown.length)} of {shown.length}</span></div>}</>}
+   {isLoading?<div className="loading-list"><span className="spinner"/>Loading tasks…</div>:error?<div className="error-panel">Couldn’t load your tasks. {getTaskLoadErrorMessage(error, isDemoMode)}<button className="button secondary" onClick={()=>refetch()}>Try again</button></div>:shown.length===0?<EmptyState filtered={tasks.length>0} onAdd={()=>setOpen(true)}/>:view==='board'?<TaskBoard tasks={shown} onStatusChange={(taskId,status)=>updateStatus.mutate({taskId,status})}/>:<><div className="task-list">{paginateTasks(shown,visibleCount).map(task=><TaskCard key={task.id} task={task} onStatusChange={status=>updateStatus.mutate({taskId:task.id,status})} onEdit={()=>{setEditing(task);setOpen(true)}} onDelete={()=>removeTask(task)}/>)}</div>{shown.length>visibleCount&&<div className="load-more"><button className="button secondary" onClick={()=>setVisibleCount(count=>count+10)}>Load more tasks</button><span>{Math.min(visibleCount,shown.length)} of {shown.length}</span></div>}</>}
   </section>
   {open&&<div className="modal-backdrop" role="presentation"><div className="modal" role="dialog" aria-modal="true" aria-label={editing?'Edit task':'New task'}><TaskForm task={editing} onSubmit={save} onCancel={()=>{setOpen(false);setEditing(null)}} isSaving={create.isPending||update.isPending}/></div></div>}
  </div>
