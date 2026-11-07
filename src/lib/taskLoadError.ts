@@ -1,6 +1,10 @@
 type SupabaseTaskError = { code?: string; message?: string; details?: string; hint?: string }
 
-export function getTaskLoadErrorMessage(error: unknown): string {
+export function getTaskLoadErrorMessage(error: unknown, demoMode = false): string {
+  if (demoMode) {
+    const message = error instanceof Error ? error.message : ''
+    return message || 'Taskflow could not read browser storage. Enable site storage and reload the page.'
+  }
   const value = (error && typeof error === 'object' ? error : {}) as SupabaseTaskError
   const code = value.code || ''
   const message = value.message || (error instanceof Error ? error.message : '')
