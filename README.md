@@ -68,3 +68,15 @@ The task list currently uses client-side “Load more” pagination after fetchi
 ## Screenshots
 
 Add genuine screenshots captured from the deployed app under `docs/screenshots/`. No placeholder screenshots are committed; a live Supabase-backed demo requires project credentials and a deliberately provisioned demo account.
+
+## Skills demonstrated
+
+- **Frontend:** React, TypeScript, Vite, React Router, TanStack Query, responsive UI, List/Kanban views.
+- **Backend & data:** Supabase Auth, PostgreSQL, Supabase JavaScript client, SQL migrations.
+- **Security:** PostgreSQL Row Level Security, user-scoped data access, isolated demo identities, and ownership checks.
+- **Quality:** Vitest, React Testing Library, Playwright, TypeScript type checking, and Oxlint.
+- **Delivery:** Vite production builds, environment configuration, and GitHub Actions CI.
+
+## Repository
+
+- Source code: https://github.com/ADAMDEV01/taskflow
