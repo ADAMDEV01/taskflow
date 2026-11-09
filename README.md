@@ -80,3 +80,8 @@ Add genuine screenshots captured from the deployed app under `docs/screenshots/`
 ## Repository
 
 - Source code: https://github.com/ADAMDEV01/taskflow
+
+## Live deployment
+
+- **Live application:** https://taskflow-bv3d9gk15-addrryhby-5992.vercel.app
+- **GitHub repository:** https://github.com/ADAMDEV01/taskflow
